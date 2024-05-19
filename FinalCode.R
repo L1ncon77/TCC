@@ -1,4 +1,3 @@
-# Instalar e carregar a biblioteca "trend" para realizar o teste de Mann-Kendall
 if (!require("trend")) install.packages("trend") #
 library(trend)
 if(!require(dplyr)) install.packages("dplyr") #
@@ -12,19 +11,13 @@ library(writexl)
 
 
 # ---------------------------------------------------------------------------#
+# Carregando o banco de dados
 
-dados <- read.csv2('TodosOsDados_copiaseguranca.csv', stringsAsFactors = T,
+dados <- read.csv2('TodosOsDados.csv', stringsAsFactors = T,
                    fileEncoding = "latin1")    # Carregamento do arquivo csv
 View(dados)
 glimpse(dados)
 
-# Remover colunas que começam com a letra "M"
-dados <- dados %>% select(-starts_with("M"))
-
-# Remover colunas que não contenham números (manter apenas as colunas numéricas)
-dados <- dados %>% select_if(is.numeric)
-View(dados) #Visulizar os dados novamente, ver se tudo está Ok.
-glimpse(dados)
 
 
 # ---------------------------------------------------------------------------#
@@ -74,28 +67,26 @@ glimpse(dados)
 ### ALTERACAO DE COLUNA MANUALMENTE ###
 
 ##############
-# Criando o histograma com limite no eixo y de 0 a 300 e ajustando o tamanho da fonte
-hist_plot <- hist(dados$RE.N.22C.0910, col = "gray", border = "black", main = NULL, xlab = "COP", ylab = "Frequência", ylim = c(0, 200))
+# Ajustando o tamanho dos números nos eixos x e y
+par(cex.axis = 0.7)
+
+# Criando o histograma com limite no eixo y de 0 a 200 e ajustando o tamanho da fonte
+hist_plot <- hist(dados$RE.N.19C.2208, col = "gray", border = "black", main = NULL, xlab = "COP", ylab = "Frequência", xlim = c(0, 10), ylim = c(0, 300))
 
 # Ajustando o tamanho da fonte do eixo x e y
-par(cex.axis = 1.5, cex.lab = 1.5)
+par(cex.axis = 1, cex.lab = 1)
 
 # Ajustando a margem para a palavra "Frequência" no eixo y
 par(mgp = c(2.5, 1, 0))
 
-# Criando o histograma com limite no eixo y de 0 a 300 e ajustando o tamanho da fonte
-hist_plot <- hist(dados$RE.F.22C.1609, col = "gray", border = "black", main = NULL, xlab = "COP", ylab = "Frequência", ylim = c(0, 200))
-###############
+################
 
 # ---------------------------------------------------------------------------
 
 # Criando os gráficos de dispersão com degrade da temperatura
 
-dados <- read.csv2('TodosOsDados_copiaseguranca.csv', stringsAsFactors = T,
+dados <- read.csv2('TodosOsDados.csv', stringsAsFactors = T,
                    fileEncoding = "latin1")    # Carregamento do arquivo csv
-# Remover colunas que não contenham números (manter apenas as colunas numéricas)
-dados <- dados %>% select_if(is.numeric)
-View(dados)
 
 # Fazendo de 10 em 10 minutos 
 
@@ -105,13 +96,13 @@ dados$tempo <- 10*rep(1:(nrow(dados)/10), each = 10)
 # Agora, agrupando os dados por "Grupo" e calculando as médias para as colunas "COP" e "T_Med_Reserv"
 dados_agrupados <- dados %>%
   group_by(tempo) %>%
-  summarize(COP_Media = mean(RE.F.19C.2609), T_Med_Reserv_Media = mean(T.RE.N.22C.0910))
+  summarize(COP_Media = mean(RE.N.22C.0910), T_Med_Reserv_Media = mean(T.RE.N.22C.0910))
 
 # Visualizando os dados reorganizados
-View(dados_agrupados)
+# View(dados_agrupados)
 
 ggplot(dados_agrupados, aes(x = tempo, y = COP_Media, color = T_Med_Reserv_Media)) +
-  geom_point(size = 3) +
+  geom_point(size = 2) +  # Reduzindo o tamanho dos pontos para 2
   scale_color_gradientn(colors = c("#00AFBB", "#E7B800", "#FC4E07")) +
   labs(x = "Tempo", y = "COP") +
   ylim(3, 7) +  # Definindo o limite do eixo y para no máximo 7
@@ -119,25 +110,29 @@ ggplot(dados_agrupados, aes(x = tempo, y = COP_Media, color = T_Med_Reserv_Media
   theme_minimal() + # Usando o tema minimal para evitar interferências com os eixos
   theme(
     # plot.background = element_rect(fill = "white"), # Define o fundo do painel principal como branco
-    legend.text = element_text(size = 12), # Tamanho da fonte da legenda da barra de cores
-    axis.text.x = element_text(size = 16), # Tamanho da fonte da legenda do eixo x
-    axis.text.y = element_text(size = 16), # Tamanho da fonte da legenda do eixo y
-    axis.title.x = element_text(size = 14), # Tamanho da fonte do título do eixo x
-    axis.title.y = element_text(size = 14), # Tamanho da fonte do título do eixo y
-    legend.title = element_text(size = 10) # Tamanho da fonte do título da barra de cores
+    legend.text = element_text(size = 11), # Tamanho da fonte da legenda da barra de cores
+    axis.text.x = element_text(size = 13), # Tamanho da fonte da legenda do eixo x
+    axis.text.y = element_text(size = 13), # Tamanho da fonte da legenda do eixo y
+    axis.title.x = element_text(size = 13), # Tamanho da fonte do título do eixo x
+    axis.title.y = element_text(size = 13), # Tamanho da fonte do título do eixo y
+    legend.title = element_text(size = 13) # Tamanho da fonte do título da barra de cores
   ) +
   guides(
-    color = guide_colorbar(title = "Temperatura\nmédia do\nreservatório")
+    color = guide_colorbar(
+      title = expression(bar(T) * " "~reserv.), 
+      title.position = "top", 
+      title.theme = element_text(size = 8)
+    )
   )
+
+
+
 # ---------------------------------------------------------------------------#
 
 # Criando gráficos para o COP convencional ao longo do tempo. 
 
-dados <- read.csv2('TodosOsDados_copiaseguranca.csv', stringsAsFactors = T,
+dados <- read.csv2('TodosOsDados.csv', stringsAsFactors = T,
                    fileEncoding = "latin1")    # Carregamento do arquivo csv
-# Remover colunas que não contenham números (manter apenas as colunas numéricas)
-dados <- dados %>% select_if(is.numeric)
-View(dados)
 
 # Fazendo de 10 em 10 minutos 
 
@@ -150,20 +145,20 @@ dados_agrupados <- dados %>%
   summarize(COP_Media = mean(C.N.22C.0910))
 
 # Visualizando os dados reorganizados
-View(dados_agrupados)
+# View(dados_agrupados)
 
 ggplot(dados_agrupados, aes(x = tempo, y = COP_Media)) +
-  geom_point(color = "blue", size = 3) +  # Adicionando a cor azul aos pontos
+  geom_point(color = "blue", size = 1.5) +  # Adicionando a cor azul aos pontos
   # geom_line(color = "blue") +   # Conectando os pontos com linhas azuis
   ylim(2.5, 4.5) +  # Definindo o limite do eixo y para no máximo 7
   theme_minimal() + # Usando o tema minimal para evitar interferências com os eixos
   theme(
     # plot.background = element_rect(fill = "white"), # Define o fundo do painel principal como branco
     
-    axis.text.x = element_text(size = 16), # Tamanho da fonte da legenda do eixo x
-    axis.text.y = element_text(size = 16), # Tamanho da fonte da legenda do eixo y
-    axis.title.x = element_text(size = 14), # Tamanho da fonte do título do eixo x
-    axis.title.y = element_text(size = 14), # Tamanho da fonte do título do eixo y
+    axis.text.x = element_text(size = 13), # Tamanho da fonte da legenda do eixo x
+    axis.text.y = element_text(size = 13), # Tamanho da fonte da legenda do eixo y
+    axis.title.x = element_text(size = 13), # Tamanho da fonte do título do eixo x
+    axis.title.y = element_text(size = 13), # Tamanho da fonte do título do eixo y
     
   ) +
   labs(title = NULL,
@@ -176,15 +171,15 @@ ggplot(dados_agrupados, aes(x = tempo, y = COP_Media)) +
 
 dados <- read.csv2('TodosOsDados_copiaseguranca.csv', stringsAsFactors = T,
                    fileEncoding = "latin1")    # Carregamento do arquivo csv
+
 # Remover colunas que não contenham números (manter apenas as colunas numéricas)
 dados <- dados %>% select_if(is.numeric)
-
 # Remover colunas que começam com a letra "M"
 dados <- dados %>% select(-starts_with("M"))
 # Remover colunas que começam com a letra "T"
 dados <- dados %>% select(-starts_with("T"))
 
-# Visualizar os dados após a remoção das colunas
+# Visualizar os dados após a remoção das colunas nao necessarias
 View(dados)
 glimpse(dados)
 
@@ -245,10 +240,13 @@ for (i in 1:ncol(dados)) {
 #######################################################################################
 ########################## ANOVA - CASO 1 ######################################################
 #######################################################################################
+#Fatores: Aparelho e setup 
 
-# Carregar o banco de dados
+# Importante: selecionar o diretorio de trabalho (working directory)
+# Isso pode ser feito manualmente: Session > Set Working Directory > Choose Directory
 
-dados <- read.csv2('aparelho_setup.csv', stringsAsFactors = T,
+#AVALIANDO COM A BOMBA LIGADA
+dados <- read.csv2('Caso1-1.csv', stringsAsFactors = T,
                    fileEncoding = "latin1")    # Carregamento do arquivo csv
 View(dados)                                    # Visualizacao dos dados em janela separada
 glimpse(dados)                                 # Visualizacao de um resumo dos dados
@@ -257,16 +255,12 @@ glimpse(dados)                                 # Visualizacao de um resumo dos d
 
 ## Construcao do modelo:
 modelo <- aov(COP ~ aparelho*setup, dados)
-plot(modelo, 1)
 summary(modelo)
+
 ## Teste de normalidade para os residuos:
 shapiro.test(modelo$residuals)
-
-dados$Residuos <- modelo$residuals
-
-
 ## Verificacao da homogeneidade de variancias - teste de Levene (pacote car)
-leveneTest(Residuos ~ aparelho*setup, dados, center = mean)
+leveneTest(COP ~ aparelho*setup, dados)
 
 
 # Grafico de interacao (Pacote ggplot2)
@@ -283,48 +277,69 @@ ggplot(dados, aes(x = aparelho, y = COP, group = setup)) +
   # Modificação da legenda do eixo x
   labs(x = "Tipo de aparelho")
 
-#######################################################################################
-########################## ANOVA - CASO 2 ######################################################
-#######################################################################################
+#----------------------------------------------------------------------------------------#
+#----------------------------------------------------------------------------------------#
 
-# Carregar o banco de dados
-
-# Importante: selecionar o diretorio de trabalho (working directory)
-# Isso pode ser feito manualmente: Session > Set Working Directory > Choose Directory
-
-dados <- read.csv2('conveccao_setup.csv', stringsAsFactors = T,
+#AVALIANDO COM A BOMBA DESLIGADA
+dados <- read.csv2('Caso1-2.csv', stringsAsFactors = T,
                    fileEncoding = "latin1")    # Carregamento do arquivo csv
 View(dados)                                    # Visualizacao dos dados em janela separada
 glimpse(dados)                                 # Visualizacao de um resumo dos dados
 
-# Verificacao dos pressupostos nos dados brutos
-
-## Verificacao da homogeneidade de variancias - teste de Levene (pacote car)
-# Testando com dados tranformados tambem
-leveneTest(COP ~ conveccao*setup, dados, center = mean)
-leveneTest(sqrt(COP) ~ conveccao*setup, dados, center = mean)
-leveneTest(log(COP) ~ conveccao*setup, dados, center = mean)
-leveneTest(log10(COP) ~ conveccao*setup, dados, center = mean)
-leveneTest((1/COP) ~ conveccao*setup, dados, center = mean)
-
-# Passo 4: Verificacao dos pressupostos nos residuos
 
 ## Construcao do modelo:
-modelo <- aov((1/COP) ~ conveccao*setup, dados)
+modelo <- aov(COP ~ aparelho*setup, dados)
+summary(modelo)
+
+## Teste de normalidade para os residuos:
+shapiro.test(modelo$residuals)
+## Verificacao da homogeneidade de variancias - teste de Levene (pacote car)
+leveneTest(COP ~ aparelho*setup, dados)
+
+
+# Grafico de interacao (Pacote ggplot2)
+
+ggplot(dados, aes(x = aparelho, y = COP, group = setup)) +
+  geom_line(stat = "summary", fun.data = "mean_se", linewidth = 0.6, aes(linetype = setup)) +
+  geom_point(stat = "summary", fun = "mean", size = 2, aes(shape = setup)) +
+  geom_errorbar(stat = "summary", fun.data = "mean_se", width = 0.2) +
+  
+  # Ajuste do tamanho dos rótulos do eixo x e y
+  theme(axis.text.x = element_text(size = 12),   # Ajusta o tamanho do rótulo do eixo x
+        axis.text.y = element_text(size = 12)) +  # Ajusta o tamanho do rótulo do eixo y
+  
+  # Modificação da legenda do eixo x
+  labs(x = "Tipo de aparelho")
+
+
+
+#####################################################################################
+########################## ANOVA - CASO 2 ######################################################
+#######################################################################################
+#Fatores: tipo de conveção e temepatura de setup
+
+dados <- read.csv2('Caso2.csv', stringsAsFactors = T,
+                   fileEncoding = "latin1")    # Carregamento do arquivo csv
+View(dados)                                    # Visualizacao dos dados em janela separada
+glimpse(dados)                                 # Visualizacao de um resumo dos dados
+
+# Verificacao dos pressupostos nos residuos
+
+## Construcao do modelo:
+modelo <- aov(COP ~ conveccao*setup, dados)
 summary(modelo)
 
 # Calculando as médias dos grupos
-medias <- aggregate(1/COP ~ conveccao, data = dados, FUN = mean)
+medias <- aggregate(COP ~ conveccao, data = dados, FUN = mean)
 # Mostra as médias dos grupos
 print(medias)
 
 
 ## Teste de normalidade para os residuos:
 shapiro.test(modelo$residuals)
-dados$Residuos <- modelo$residuals
 
 ## Verificacao da homogeneidade de variancias - teste de Levene (pacote car)
-leveneTest(Residuos ~ conveccao*setup, dados, center = mean)
+leveneTest(COP ~ conveccao*setup, dados)
 
 
 # Grafico de interacao (Pacote ggplot2)
@@ -340,4 +355,3 @@ ggplot(dados, aes(x = conveccao, y = COP, group = setup)) +
   
   # Modificação da legenda do eixo x
   labs(x = "Tipo de convecção")
-
