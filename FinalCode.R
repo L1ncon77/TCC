@@ -104,7 +104,7 @@ dados_agrupados <- dados %>%
 ggplot(dados_agrupados, aes(x = tempo, y = COP_Media, color = T_Med_Reserv_Media)) +
   geom_point(size = 2) +  # Reduzindo o tamanho dos pontos para 2
   scale_color_gradientn(colors = c("#00AFBB", "#E7B800", "#FC4E07")) +
-  labs(x = "Tempo", y = "COP") +
+  labs(x = "Tempo (minutos)", y = "COP") +
   ylim(3, 7) +  # Definindo o limite do eixo y para no máximo 7
   ggtitle(NULL) +  # Adicione o título aqui
   theme_minimal() + # Usando o tema minimal para evitar interferências com os eixos
@@ -119,12 +119,11 @@ ggplot(dados_agrupados, aes(x = tempo, y = COP_Media, color = T_Med_Reserv_Media
   ) +
   guides(
     color = guide_colorbar(
-      title = expression(bar(T) * " "~reserv.), 
+      title = expression(bar(T) * " "~reserv.~(degree*C)), 
       title.position = "top", 
       title.theme = element_text(size = 8)
     )
   )
-
 
 
 # ---------------------------------------------------------------------------#
@@ -162,14 +161,14 @@ ggplot(dados_agrupados, aes(x = tempo, y = COP_Media)) +
     
   ) +
   labs(title = NULL,
-       x = "Tempo",
+       x = "Tempo (minutos)",
        y = "COP")
 
 
 # ---------------------------------------------------------------------------#
 ### Teste de Mann-Kendall ###
 
-dados <- read.csv2('TodosOsDados_copiaseguranca.csv', stringsAsFactors = T,
+dados <- read.csv2('TodosOsDados.csv', stringsAsFactors = T,
                    fileEncoding = "latin1")    # Carregamento do arquivo csv
 
 # Remover colunas que não contenham números (manter apenas as colunas numéricas)
@@ -213,6 +212,7 @@ tabela_resultados <- do.call(rbind, resultados)
 MK_ <- tabela_resultados
 View(MK_)
 
+mk.test(dados$C.F.19C.2509)
 
 # Salvando o banco de dados em um arquivo CSV 
 ### write_xlsx(MK_minuto, path = "MK_.xlsx") #####
@@ -355,3 +355,5 @@ ggplot(dados, aes(x = conveccao, y = COP, group = setup)) +
   
   # Modificação da legenda do eixo x
   labs(x = "Tipo de convecção")
+
+####################################### THE END ###############################################
